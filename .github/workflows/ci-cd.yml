@@ -1,0 +1,97 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore HelloWorldApp/HelloWorldApp.csproj
+
+      - name: Build
+        run: dotnet build HelloWorldApp/HelloWorldApp.csproj --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test HelloWorldApp.Tests/HelloWorldApp.Tests.csproj --verbosity normal
+
+      - name: Publish app
+        run: dotnet publish HelloWorldApp/HelloWorldApp.csproj -c Release -o out
+
+      - name: Upload published app artifact
+        uses: actions/upload-artifact@v4
+        with:
+            name: published-app
+            path: out/
+
+      - name: Get version from Git tag
+        id: get_version
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 || echo "v0.0.1")
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+  docker-build-push-run:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download published app artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: published-app
+        path: ./app
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and tag Docker image
+      run: |
+        docker build -t inframous/hello-world:${{ needs.build-and-test.outputs.version }} .
+
+    - name: Push Docker image
+      run: |
+        docker push inframous/hello-world:${{ needs.build-and-test.outputs.version }}
+
+    - name: Run container and verify output
+      run: |
+        OUTPUT=$(docker run --rm inframous/hello-world:${{ needs.build-and-test.outputs.version }})
+        echo "Output: $OUTPUT"
+        if [[ "$OUTPUT" != *"Hello World"* ]]; then
+          echo "Expected 'Hello World' but got: $OUTPUT"
+          exit 1
+        fi
+
+    - name: Print version tag
+      run: echo "Version pushed: ${{ needs.build-and-test.outputs.version }}"

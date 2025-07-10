@@ -1,23 +1,24 @@
+# Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-# Copy csproj and restore dependencies
-COPY HelloWorldApp/*.csproj ./HelloWorldApp/
+# Copy csproj and restore as separate layers (caching)
+COPY HelloWorldApp/*.csproj HelloWorldApp/
 RUN dotnet restore HelloWorldApp/HelloWorldApp.csproj
 
-# Copy all source files
-COPY HelloWorldApp/. ./HelloWorldApp/
+# Copy the entire source
+COPY HelloWorldApp/ HelloWorldApp/
 
-# Build and publish the app to /app/out
-RUN dotnet publish HelloWorldApp/HelloWorldApp.csproj -c Release -o /app/out
+# Build and publish the app
+WORKDIR /src/HelloWorldApp
+RUN dotnet publish -c Release -o /app/publish
 
-
-
+# Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app
 
-# Copy the published output from build stage
-COPY --from=build /app/out ./
+# Copy published output from build stage
+COPY --from=build /app/publish .
 
-# Set entrypoint
+# Run the app
 ENTRYPOINT ["dotnet", "HelloWorldApp.dll"]

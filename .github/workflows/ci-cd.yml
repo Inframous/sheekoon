@@ -6,6 +6,21 @@ on:
       - main
 
 jobs:
+  prify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Run dotnet format check
+        run: dotnet format --verify-no-changes
+
   build-and-test:
     runs-on: ubuntu-latest
     outputs:
@@ -79,7 +94,16 @@ jobs:
     - name: Build and tag Docker image
       run: |
         docker build -t inframous/hello-world:${{ needs.build-and-test.outputs.version }} .
-
+    
+    - name: Scan image with Trivy
+      uses: aquasecurity/trivy-action@v0.13.1
+      with:
+        image-ref: 'inframous/hello-world:${{ needs.build-and-test.outputs.version }}'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '1'
+        ignore-unfixed: true
+        format: 'table'
+				
     - name: Push Docker image
       run: |
         docker push inframous/hello-world:${{ needs.build-and-test.outputs.version }}

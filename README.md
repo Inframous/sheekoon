@@ -51,7 +51,7 @@ docker-compose up
 To run the container in a Kubernetes cluster, use the following manifest:
 
 ```bash
-kubectl apply -f hello-world-job.yaml
+kubectl apply -f hello-world-job.yml
 kubectl logs job/hello-world-job
 ```
 This will run the container once, capture its output, and then complete.

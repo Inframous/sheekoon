@@ -94,4 +94,4 @@ jobs:
         fi
 
     - name: Print version tag
-      run: echo "Version pushed: ${{ needs.build-and-test.outputs.version }}"
+      run: echo "Version pushed:${{ needs.build-and-test.outputs.version }}"

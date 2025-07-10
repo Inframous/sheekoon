@@ -19,7 +19,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Run dotnet format check
-        run: dotnet format --verify-no-changes
+        run: dotnet format HelloWorldApp/HelloWorldApp.csproj --verify-no-changes
 
   build-and-test:
     runs-on: ubuntu-latest

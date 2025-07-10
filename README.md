@@ -108,4 +108,3 @@ act push
 - Make sure to tag commits (`git tag v1.0.0`) to update image versions
 
 ---
-```

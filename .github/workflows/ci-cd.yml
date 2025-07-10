@@ -103,7 +103,7 @@ jobs:
         exit-code: '1'
         ignore-unfixed: true
         format: 'table'
-				
+
     - name: Push Docker image
       run: |
         docker push inframous/hello-world:${{ needs.build-and-test.outputs.version }}

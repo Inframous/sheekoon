@@ -66,7 +66,7 @@ A GitHub Actions workflow is triggered on every push to the `main` branch. It pe
 - Restores dependencies and builds the .NET application
 - Executes unit tests
 - Publishes the app and uploads it as an artifact
-- Extracts a semantic version from the latest Git tag (e.g. `v1.0.0`)
+- Extracts a semantic version from the latest Git tag (e.g. `v0.0.1`)
 - Builds a Docker image and tags it with the version
 - Scans the image for vulnerabilities using Trivy (fails on HIGH/CRITICAL)
 - Pushes the Docker image to Docker Hub
@@ -90,8 +90,8 @@ docker pull inframous/hello-world:<tag>
 Example:
 
 ```bash
-docker pull inframous/hello-world:v1.0.0
-docker run --rm inframous/hello-world:v1.0.0
+docker pull inframous/hello-world:v0.0.1
+docker run --rm inframous/hello-world:v0.0.1
 ```
 
 ## Run the Pipeline Locally (Optional)
@@ -105,6 +105,6 @@ act push
 ## Notes
 
 - GitHub Secrets required: `DOCKERHUB_USER`, `DOCKERHUB_TOKEN`
-- Make sure to tag commits (`git tag v1.0.0`) to update image versions
+- Make sure to tag commits (`git tag v0.0.1`) to update image versions
 
 ---
